@@ -1,20 +1,21 @@
 #pragma once
 #include <iostream>
+#include "Post.h";
 
 using namespace std;
 
-class page{
+class Page{
 private:
     string name;
     Post** postss;
     int postCount; 
 public:
-    page();
+    Page();
     void addPost();
     Post** getPosts();
     string getName();
     void display() const;
-    ~page();
+    ~Page();
 
 };
 

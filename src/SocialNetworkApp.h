@@ -1,5 +1,12 @@
 #pragma once
 #include <iostream>
+#include "User.h";
+#include "Page.h";
+#include "Post.h";
+#include "Comment.h";
+#include "Date.h";
+
+
 using namespace std;
 
 class SocialNetworkApp{
