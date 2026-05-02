@@ -1,21 +1,35 @@
 #pragma once
 #include <iostream>
-#include "Post.h";
+#include <string>
+#include "Object.h"
 
 using namespace std;
 
-class Page{
+// Forward declaration 
+
+class Post;
+
+class Page : public Object {
 private:
     string name;
-    Post** postss;
+    Post** posts; 
     int postCount; 
+
 public:
-    Page();
-    void addPost();
-    Post** getPosts();
-    string getName();
-    void display() const;
+    // Constructor needs ID for the Object base class
+    Page(string id, string n);
+
+    // Method
+    void addPost(Post* p);
+
+    // Getters
+    Post** getPosts() const;
+    int getPostCount() const;
+    string getName() const;
+
+    // Overriding the pure virtual function from Object
+    void display() const override;
+
+    // Destructor
     ~Page();
-
 };
-

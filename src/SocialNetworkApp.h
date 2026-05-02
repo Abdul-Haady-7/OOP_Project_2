@@ -23,9 +23,9 @@ private:
     Date theDate;
 
     //Private Methods
-    User* findUser();
-    Page* findPage();
-    Post* findPost();
+    User* findUser(string id);
+    Page* findPage(string id);
+    Post* findPost(string id);
 public:
     void loadData();
     void run();
