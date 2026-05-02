@@ -1,7 +1,7 @@
 #Progress#
 
 17/4/2026
-- 0868 created a repo and uploaded some .h files. 
+- Haady created a repo and uploaded some .h files. 
 
 20/4/2026
 - Trashed existing repo and started the project from scratch
@@ -15,5 +15,5 @@
 
 1/05/2026
 - Finalised the draft of all classes
-- 0895 created second repo
+- Hamees created second repo
 - started making .h files
