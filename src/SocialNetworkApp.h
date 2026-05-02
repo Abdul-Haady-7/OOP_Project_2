@@ -1,5 +1,9 @@
 #pragma once
 #include <iostream>
+#include "User.h"
+#include "Post.h"
+#include "Comment.h"
+#include "Page.h"
 using namespace std;
 
 class SocialNetworkApp{

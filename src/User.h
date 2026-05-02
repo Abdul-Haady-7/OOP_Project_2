@@ -11,7 +11,7 @@ private:
     Page** likedPages;
     int likedPagesCount;
 public:
-    User();
+    User(string n);
     void addFriend();
     void addLikedPage();
     User** getFriends() const;

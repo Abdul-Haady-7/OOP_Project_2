@@ -1,9 +1,11 @@
 #pragma once
 #include <iostream>
+#include "Post.h"
+
 
 using namespace std;
 
-class page{
+class Page : {
 private:
     string name;
     Post** postss;
