@@ -1,10 +1,9 @@
 #pragma once
 #include <iostream>
 #include <string>
-#include "Object.h";
-#include "Date.h";
-#include "Comment.h";
-
+#include "Object.h"
+#include "Date.h"
+#include "Comment.h"
 
 using namespace std;
 

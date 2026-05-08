@@ -15,4 +15,16 @@ Post* Memory::getOriginalPost() const {
 }
 
 void Memory::display() const {
+    cout << "~~~ ";
+    author[0]->display();
+    cout << " shared a memory ~~~ ...(";
+    date.display();
+    cout << ")" << endl;
+    
+    cout << "\"" << description << "\"" << endl;
+    
+    int years = originalPost->getDate()->yearDiff(this->date);
+    cout << "\t\t\t\t\t(" << years << " Years Ago)" << endl;
+    
+    originalPost->display();
 }

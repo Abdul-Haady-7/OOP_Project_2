@@ -9,12 +9,10 @@ private:
     string id;
 
 public:
-    Object(string id){};
+    Object(string id);
 
-    string getID() const{};
+    string getID() const;
     virtual void display() const= 0;
 
-    virtual ~Object(){};
+    virtual ~Object();
 };
-
-

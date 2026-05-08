@@ -12,7 +12,7 @@ private:
     int year;
 
 public:
-    Date(int d, int m, int y){};
+    Date(int d, int m, int y);
     
     bool isIn24(const Date& rightNow) const;
     int yearDiff(const Date& rightNow) const;

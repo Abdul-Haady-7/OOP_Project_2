@@ -4,7 +4,6 @@
 
 using namespace std;
 
-// Constructor
 User::User(string id, string n) : Object(id) {
     this->name = n;
     this->friendsCount = 0;
@@ -19,7 +18,7 @@ User::User(string id, string n) : Object(id) {
 void User::addFriends(User* u) {
     
     if (friends == nullptr) {
-        friends = new User*[10]; // Arbitrary max size 
+        friends = new User*[10]; 
         for(int i = 0; i < 10; i++) friends[i] = nullptr;
     }
     
@@ -50,7 +49,6 @@ void User::addPosts(Post* p) {
     }
 }
 
-// Getters
 User** User::getFriends() const { return friends; }
 int User::getFriendsCount() const { return friendsCount; }
 Page** User::getLikedPages() const { return likedPages; }
@@ -63,7 +61,6 @@ void User::display() const {
     cout << name;
 }
 
-// Destructor
 User::~User() {
     if (friends != nullptr) delete[] friends;
     if (likedPages != nullptr) delete[] likedPages;

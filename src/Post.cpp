@@ -54,6 +54,13 @@ Object* Post::getAuthor() const {
 }
 
 void Post::display() const {
+    cout << "--- ";
+    author[0]->display(); 
+    cout << " shared \"" << description << "\"" << endl;
+    
+    for (int i = 0; i < commentsCount; i++) {
+        comments[i]->display();
+    }
 }
 
 Post::~Post() {

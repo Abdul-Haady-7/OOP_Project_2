@@ -5,8 +5,6 @@
 
 using namespace std;
 
-// Forward declarations
-
 class Page;
 class Post;
 
@@ -14,7 +12,6 @@ class User : public Object {
 private:
     string name;
     
-    // Arrays of pointers 
     User** friends;
     int friendsCount;
     
@@ -25,24 +22,21 @@ private:
     int postCount;
 
 public:
-    // Constructor
     User(string id, string n);
 
-    // Methods to populate the arrays
-    void addFriend(User* u);
-    void addLikedPage(Page* p);
-    void addPost(Post* p);
+    void addFriends(User* u);
+    void addLikedPages(Page* p);
+    void addPosts(Post* p);
 
-    // Getters
     User** getFriends() const;
     int getFriendsCount() const;
     Page** getLikedPages() const;
     int getLikedPagesCount() const;
     string getName() const;
+    Post** getPosts() const;
+    int getPostCount() const;
 
-    // Overriding the pure virtual function from Object
     void display() const override;
 
-    // Destructor
     ~User();
 };

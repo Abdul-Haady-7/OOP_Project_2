@@ -5,7 +5,6 @@
 
 using namespace std;
 
-// Forward declaration 
 
 class Post;
 
@@ -16,20 +15,15 @@ private:
     int postCount; 
 
 public:
-    // Constructor needs ID for the Object base class
     Page(string id, string n);
 
-    // Method
     void addPost(Post* p);
 
-    // Getters
     Post** getPosts() const;
     int getPostCount() const;
     string getName() const;
 
-    // Overriding the pure virtual function from Object
     void display() const override;
 
-    // Destructor
     ~Page();
 };

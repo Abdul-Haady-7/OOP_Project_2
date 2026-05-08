@@ -1,12 +1,12 @@
 #pragma once
 #include <iostream>
-#include "User.h";
-#include "Page.h";
-#include "Post.h";
-#include "Comment.h";
-#include "Date.h";
+#include "User.h"
+#include "Page.h"
+#include "Post.h"
+#include "Comment.h"
+#include "Date.h"
 #include "Memory.h"
-
+#include "Activity.h"
 
 using namespace std;
 
@@ -28,6 +28,7 @@ private:
     Page* findPage(string id);
     Post* findPost(string id);
 public:
+    SocialNetworkApp(); 
     void loadData();
     void run();
     void setUser();

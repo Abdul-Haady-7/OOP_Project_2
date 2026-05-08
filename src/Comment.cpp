@@ -12,4 +12,7 @@ Comment::Comment(string id, Object* auth, string t) {
 }
 
 void Comment::display() const {
+    cout << "\t\t\t\t\t";
+    author->display();
+    cout << " wrote: \"" << text << "\"" << endl;
 }
