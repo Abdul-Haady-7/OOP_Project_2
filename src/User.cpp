@@ -16,7 +16,7 @@ User::User(string id, string n) : Object(id) {
     this->posts = nullptr;
 }
 
-void User::addFriend(User* u) {
+void User::addFriends(User* u) {
     
     if (friends == nullptr) {
         friends = new User*[10]; // Arbitrary max size 
@@ -28,7 +28,7 @@ void User::addFriend(User* u) {
     }
 }
 
-void User::addLikedPage(Page* p) {
+void User::addLikedPages(Page* p) {
     if (likedPages == nullptr) {
         likedPages = new Page*[10];
         for(int i = 0; i < 10; i++) likedPages[i] = nullptr;
@@ -39,7 +39,7 @@ void User::addLikedPage(Page* p) {
     }
 }
 
-void User::addPost(Post* p) {
+void User::addPosts(Post* p) {
     if (posts == nullptr) {
         posts = new Post*[10];
         for(int i = 0; i < 10; i++) posts[i] = nullptr;
@@ -56,6 +56,8 @@ int User::getFriendsCount() const { return friendsCount; }
 Page** User::getLikedPages() const { return likedPages; }
 int User::getLikedPagesCount() const { return likedPagesCount; }
 string User::getName() const { return name; }
+Post** User::getPosts() const { return posts; }
+int User::getPostCount() const { return postCount; }
 
 void User::display() const {
     cout << name;

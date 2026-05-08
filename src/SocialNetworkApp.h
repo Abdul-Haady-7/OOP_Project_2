@@ -5,6 +5,7 @@
 #include "Post.h";
 #include "Comment.h";
 #include "Date.h";
+#include "Memory.h"
 
 
 using namespace std;
