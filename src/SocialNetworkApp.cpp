@@ -5,7 +5,7 @@
 
 using namespace std;
 
-SocialNetworkApp::SocialNetworkApp() : theDate(8, 5, 2026) 
+SocialNetworkApp::SocialNetworkApp() : theDate(15, 11, 2017) 
 {
     users = nullptr;
     userCount = 0;
@@ -46,6 +46,14 @@ Post* SocialNetworkApp::findPost(string id) {
 void SocialNetworkApp::loadData() {
     ifstream file;
     
+    cout << "\n--- THE TRUTH TEST ---" << endl;
+    file.open("Pages.txt");
+    string firstWord;
+    file >> firstWord;
+    cout << "The exact first thing C++ sees is: ->" << firstWord << "<-" << endl;
+    file.close();
+    file.clear();
+    
     file.open("Pages.txt");
     if (file.is_open()) {
         file >> pageCount;
@@ -60,6 +68,7 @@ void SocialNetworkApp::loadData() {
         file.clear(); 
     } else cout << "Error: Pages.txt not found." << endl;
 
+    
     file.open("Users.txt");
     if (file.is_open()) {
         file >> userCount;
@@ -77,6 +86,7 @@ void SocialNetworkApp::loadData() {
         file.clear(); 
     } else cout << "Error: Users.txt not found." << endl;
 
+    
     file.open("Users.txt");
     if (file.is_open()) {
         int dummyCount;
@@ -98,6 +108,7 @@ void SocialNetworkApp::loadData() {
         file.clear(); 
     }
 
+    
     file.open("Posts.txt");
     if (file.is_open()) {
         file >> postCount;
@@ -146,6 +157,7 @@ void SocialNetworkApp::loadData() {
         file.clear(); 
     } else cout << "Error: Posts.txt not found." << endl;
 
+    
     file.open("Comments.txt");
     if (file.is_open()) {
         file >> commentCount;
@@ -171,6 +183,10 @@ void SocialNetworkApp::loadData() {
     } else cout << "Error: Comments.txt not found." << endl;
     
     cout << "System Data Successfully Loaded." << endl;
+    cout << "--- DIAGNOSTICS ---" << endl;
+    cout << "Users loaded: " << userCount << endl;
+    cout << "Pages loaded: " << pageCount << endl;
+    cout << "Posts loaded: " << postCount << endl;
 }
 
 
