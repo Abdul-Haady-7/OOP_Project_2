@@ -1,3 +1,13 @@
+/* ==========================================================================
+ * Class: SocialNetworkApp
+ * Type: Core Controller / Manager Class
+ * Purpose: This is the brain of the entire application. It is responsible for 
+ * reading the text files to dynamically allocate all users, pages, 
+ * posts, and comments. It wires all the pointers together to form 
+ * the network graph. It also runs the main console loop, processes 
+ * user inputs, and manages the master cleanup upon exit.
+ * ========================================================================== */
+
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -5,30 +15,29 @@
 
 using namespace std;
 
+// Constructor: Sets the system date and initializes all master arrays to null
 SocialNetworkApp::SocialNetworkApp() : theDate(15, 11, 2017) 
 {
     users = nullptr;
     userCount = 0;
-    
     pages = nullptr;
     pageCount = 0;
-    
     posts = nullptr;
     postCount = 0;
-    
     comments = nullptr;
     commentCount = 0;
-    
     currentUser = nullptr;
 }
 
+// Helper: Searches the master users array and returns a pointer if ID matches
 User* SocialNetworkApp::findUser(string id) {
     for (int i = 0; i < userCount; i++) {
         if (users[i]->getID() == id) return users[i];
     }
-    return nullptr;
+    return nullptr; // Returns null if user doesn't exist
 }
 
+// Helper: Searches the master pages array and returns a pointer if ID matches
 Page* SocialNetworkApp::findPage(string id) {
     for (int i = 0; i < pageCount; i++) {
         if (pages[i]->getID() == id) return pages[i];
@@ -36,6 +45,7 @@ Page* SocialNetworkApp::findPage(string id) {
     return nullptr;
 }
 
+// Helper: Searches the master posts array and returns a pointer if ID matches
 Post* SocialNetworkApp::findPost(string id) {
     for (int i = 0; i < postCount; i++) {
         if (posts[i]->getID() == id) return posts[i];
@@ -43,32 +53,26 @@ Post* SocialNetworkApp::findPost(string id) {
     return nullptr;
 }
 
+// Master parsing function: Reads all txt files and builds the object graph
 void SocialNetworkApp::loadData() {
-    ifstream file;
+    ifstream file; // File stream object used to read the text files
     
-    cout << "\n--- THE TRUTH TEST ---" << endl;
-    file.open("Pages.txt");
-    string firstWord;
-    file >> firstWord;
-    cout << "The exact first thing C++ sees is: ->" << firstWord << "<-" << endl;
-    file.close();
-    file.clear();
-    
+    // --- 1. LOAD PAGES ---
     file.open("Pages.txt");
     if (file.is_open()) {
         file >> pageCount;
-        pages = new Page*[pageCount];
+        pages = new Page*[pageCount]; // Allocates the master Pages array
         for (int i = 0; i < pageCount; i++) {
             string id, name;
             file >> id;
-            getline(file >> ws, name); 
+            getline(file >> ws, name); // Reads the rest of the line (clearing hidden whitespace)
             pages[i] = new Page(id, name);
         }
         file.close();
-        file.clear(); 
+        file.clear(); // Resets the stream state to prevent EOF bugs on the next file
     } else cout << "Error: Pages.txt not found." << endl;
 
-    
+    // --- 2. LOAD USERS (Creation Pass) ---
     file.open("Users.txt");
     if (file.is_open()) {
         file >> userCount;
@@ -76,39 +80,43 @@ void SocialNetworkApp::loadData() {
         for (int i = 0; i < userCount; i++) {
             string id, fName, lName, temp;
             file >> id >> fName >> lName;
-            string fullName = fName + " " + lName;
+            string fullName = fName + " " + lName; // Combines first and last name
             users[i] = new User(id, fullName);
             
+            // Fast-forwards through the friend/page IDs (we will read them in Pass 2)
             while (file >> temp && temp != "-1") {}
             while (file >> temp && temp != "-1") {}
         }
         file.close();
-        file.clear(); 
+        file.clear();
     } else cout << "Error: Users.txt not found." << endl;
 
-    
+    // --- 3. WIRE USER POINTERS (Linking Pass) ---
+    // Re-reads Users.txt now that all User and Page objects actually exist in memory
     file.open("Users.txt");
     if (file.is_open()) {
         int dummyCount;
         file >> dummyCount; 
         for (int i = 0; i < userCount; i++) {
             string id, dummy, friendId, pageId;
-            file >> id >> dummy >> dummy; 
+            file >> id >> dummy >> dummy; // Skips the names since they are already loaded
             
             User* currentUserObj = findUser(id);
             
+            // Reads friend IDs until "-1" is hit, and links the pointers
             while (file >> friendId && friendId != "-1") {
                 currentUserObj->addFriends(findUser(friendId));
             }
+            // Reads page IDs until "-1" is hit, and links the pointers
             while (file >> pageId && pageId != "-1") {
                 currentUserObj->addLikedPages(findPage(pageId));
             }
         }
         file.close();
-        file.clear(); 
+        file.clear();
     }
 
-    
+    // --- 4. LOAD POSTS ---
     file.open("Posts.txt");
     if (file.is_open()) {
         file >> postCount;
@@ -125,21 +133,26 @@ void SocialNetworkApp::loadData() {
             
             int activityType = 0;
             string activityValue = "";
+            // If type is 2, it's an Activity, meaning we have to read the extra data line
             if (type == 2) {
                 file >> activityType;
                 getline(file >> ws, activityValue);
             }
             
             file >> authorId;
+            
+            // Polymorphic resolution: Checks if author is a User. If not, assumes it's a Page.
             Object* authorObj = findUser(authorId);
             if (authorObj == nullptr) authorObj = findPage(authorId);
             
+            // Instantiates the correct derived class based on the type flag
             if (type == 1) {
                 posts[i] = new Post(id, desc, postDate, authorObj);
             } else if (type == 2) {
                 posts[i] = new Activity(id, desc, postDate, authorObj, activityType, activityValue);
             }
             
+            // Adds the created post to the specific timeline of the author (User or Page)
             User* u = findUser(authorId);
             if (u != nullptr) u->addPosts(posts[i]);
             else {
@@ -147,6 +160,7 @@ void SocialNetworkApp::loadData() {
                 if (p != nullptr) p->addPost(posts[i]);
             }
             
+            // Reads liker IDs until "-1", finds them, and adds them to the post's like array
             while (file >> likerId && likerId != "-1") {
                 Object* likerObj = findUser(likerId);
                 if (likerObj == nullptr) likerObj = findPage(likerId);
@@ -154,10 +168,10 @@ void SocialNetworkApp::loadData() {
             }
         }
         file.close();
-        file.clear(); 
+        file.clear();
     } else cout << "Error: Posts.txt not found." << endl;
 
-    
+    // --- 5. LOAD COMMENTS ---
     file.open("Comments.txt");
     if (file.is_open()) {
         file >> commentCount;
@@ -168,28 +182,26 @@ void SocialNetworkApp::loadData() {
             file >> id >> postId >> authorId;
             getline(file >> ws, text);
             
+            // Resolves author as User or Page
             Object* authorObj = findUser(authorId);
             if (authorObj == nullptr) authorObj = findPage(authorId);
             
             comments[i] = new Comment(id, authorObj, text);
             
+            // Finds the associated post and links the comment inside it
             Post* p = findPost(postId);
             if (p != nullptr) {
                 p->addComment(comments[i]);
             }
         }
         file.close();
-        file.clear(); 
+        file.clear();
     } else cout << "Error: Comments.txt not found." << endl;
     
     cout << "System Data Successfully Loaded." << endl;
-    cout << "--- DIAGNOSTICS ---" << endl;
-    cout << "Users loaded: " << userCount << endl;
-    cout << "Pages loaded: " << pageCount << endl;
-    cout << "Posts loaded: " << postCount << endl;
 }
 
-
+// Changes the 'currentUser' pointer to simulate a user logging in
 void SocialNetworkApp::setUser() {
     string id;
     cout << "Enter User ID: ";
@@ -204,6 +216,7 @@ void SocialNetworkApp::setUser() {
     }
 }
 
+// Displays a list of all friends for the currently logged-in user
 void SocialNetworkApp::viewFriendList() {
     if (currentUser == nullptr) {
         cout << "Please set a current user first (Option 1)." << endl;
@@ -216,6 +229,7 @@ void SocialNetworkApp::viewFriendList() {
     User** friends = currentUser->getFriends();
     int count = currentUser->getFriendsCount();
 
+    // Loops through the friends array and prints IDs and Names
     if (friends != nullptr && count > 0) {
         for (int i = 0; i < count; i++) {
             cout << friends[i]->getID() << " - " << friends[i]->getName() << endl;
@@ -226,6 +240,7 @@ void SocialNetworkApp::viewFriendList() {
     cout << "--------------------------------------------------" << endl;
 }
 
+// Displays all posts created by the currently logged-in user
 void SocialNetworkApp::viewProfile() {
     if (currentUser == nullptr) {
         cout << "Error: Please set a current user first (Option 1) before performing this action." << endl;
@@ -239,6 +254,7 @@ void SocialNetworkApp::viewProfile() {
     Post** userPosts = currentUser->getPosts();
     int count = currentUser->getPostCount();
 
+    // Loops through and triggers display() for every post on the user's timeline
     if (userPosts != nullptr && count > 0) {
         for (int i = 0; i < count; i++) {
             userPosts[i]->display(); 
@@ -251,6 +267,7 @@ void SocialNetworkApp::viewProfile() {
     cout << "--------------------------------------------------" << endl;
 }
 
+// Generates a news feed consisting of recent posts from friends and liked pages
 void SocialNetworkApp::viewHome() {
     if (currentUser == nullptr) {
         cout << "Error: Please set a current user first (Option 1) before performing this action." << endl;
@@ -261,6 +278,7 @@ void SocialNetworkApp::viewHome() {
     cout << currentUser->getName() << " - Home Page" << endl;
     cout << "--------------------------------------------------\n" << endl;
 
+    // --- 1. Get Friend Posts ---
     User** friends = currentUser->getFriends();
     int friendCount = currentUser->getFriendsCount();
 
@@ -273,9 +291,11 @@ void SocialNetworkApp::viewHome() {
             
             if (friendPosts != nullptr) 
             {
+                // Nested loop checks every post of every friend
                 for (int j = 0; j < fPostCount; j++) 
                 {
                     Date* postDate = friendPosts[j]->getDate();
+                    // Filters out posts that are older than 24 hours
                     if (postDate != nullptr && postDate->isIn24(theDate)) {
                         friendPosts[j]->display();
                         cout << endl << endl;
@@ -285,6 +305,7 @@ void SocialNetworkApp::viewHome() {
         }
     }
 
+    // --- 2. Get Page Posts ---
     Page** pages = currentUser->getLikedPages();
     int pageCount = currentUser->getLikedPagesCount();
 
@@ -300,6 +321,7 @@ void SocialNetworkApp::viewHome() {
                 for (int j = 0; j < pPostCount; j++)
                  {
                     Date* postDate = pagePosts[j]->getDate();
+                    // Filters out posts that are older than 24 hours
                     if (postDate != nullptr && postDate->isIn24(theDate)) 
                     {
                         pagePosts[j]->display();
@@ -312,6 +334,7 @@ void SocialNetworkApp::viewHome() {
     cout << "--------------------------------------------------" << endl;
 }
 
+// Prompts for a post ID and prints everyone who liked it
 void SocialNetworkApp::viewLikedList() {
     if (currentUser == nullptr) {
         cout << "Error: Please set a current user first (Option 1)." << endl;
@@ -331,7 +354,7 @@ void SocialNetworkApp::viewLikedList() {
         if (likedBy != nullptr && likeCount > 0) {
             for (int i = 0; i < likeCount; i++) {
                 cout << likedBy[i]->getID() << " - ";
-                likedBy[i]->display(); 
+                likedBy[i]->display(); // Polymorphic display prints name
                 cout << endl;
             }
         } else {
@@ -342,6 +365,7 @@ void SocialNetworkApp::viewLikedList() {
     }
 }
 
+// Prompts for a post ID and displays that specific post and its comments
 void SocialNetworkApp::viewPost() {
     if (currentUser == nullptr) {
         cout << "Error: Please set a current user first (Option 1)." << endl;
@@ -362,6 +386,7 @@ void SocialNetworkApp::viewPost() {
     }
 }
 
+// Prompts for a page ID and prints all posts uploaded by that page
 void SocialNetworkApp::viewPage() {
     if (currentUser == nullptr) {
         cout << "Error: Please set a current user first (Option 1)." << endl;
@@ -395,6 +420,7 @@ void SocialNetworkApp::viewPage() {
     }
 }
 
+// Adds the current logged-in user to the "likedBy" array of a specific post
 void SocialNetworkApp::likePost() {
     if (currentUser == nullptr) {
         cout << "Error: Please set a current user first (Option 1)." << endl;
@@ -414,6 +440,7 @@ void SocialNetworkApp::likePost() {
     }
 }
 
+// Allows the current user to write text and append a new comment to a post
 void SocialNetworkApp::commentOnPost() {
     if (currentUser == nullptr) {
         cout << "Error: Please set a current user first (Option 1)." << endl;
@@ -428,13 +455,17 @@ void SocialNetworkApp::commentOnPost() {
     if (post != nullptr) {
         string text;
         cout << "Enter your comment: ";
-        cin.ignore(); 
+        cin.ignore(); // Clears the newline character left by cin so getline works
         getline(cin, text); 
 
+        // Generates a new ID (e.g., "c14")
         string newCommentId = "c" + to_string(commentCount + 1);
+        
+        // Dynamically allocates the new comment and passes it to the post
         Comment* newComment = new Comment(newCommentId, currentUser, text);
         post->addComment(newComment);
         
+        // Adds the comment to the App's master tracking array
         if (comments == nullptr) {
             comments = new Comment*[500]; 
         }
@@ -448,6 +479,7 @@ void SocialNetworkApp::commentOnPost() {
     }
 }
 
+// Scans the user's timeline to find and display posts made on the exact same day in previous years
 void SocialNetworkApp::seeMemory() {
     if (currentUser == nullptr) {
         cout << "Error: Please set a current user first (Option 1)." << endl;
@@ -460,13 +492,14 @@ void SocialNetworkApp::seeMemory() {
 
     Post** userPosts = currentUser->getPosts();
     int count = currentUser->getPostCount();
-    bool foundMemory = false;
+    bool foundMemory = false; // Flag to track if any memories were actually found
 
     if (userPosts != nullptr && count > 0) {
         for (int i = 0; i < count; i++) {
             Date* postDate = userPosts[i]->getDate();
             if (postDate != nullptr) {
                 int yearsAgo = postDate->yearDiff(theDate); 
+                // Only prints the memory if the difference is greater than 0 (not today)
                 if (yearsAgo > 0) {
                     cout << yearsAgo << " Years Ago" << endl;
                     userPosts[i]->display();
@@ -483,6 +516,7 @@ void SocialNetworkApp::seeMemory() {
     cout << "--------------------------------------------------" << endl;
 }
 
+// Creates a new 'Memory' object wrapping an old post, and adds it to the user's timeline
 void SocialNetworkApp::shareMemory() {
     if (currentUser == nullptr) {
         cout << "Error: Please set a current user first (Option 1)." << endl;
@@ -501,8 +535,11 @@ void SocialNetworkApp::shareMemory() {
         getline(cin, text);
 
         string newPostId = "post" + to_string(postCount + 1);
+        
+        // Dynamically allocates the Memory (which acts as a Post via Polymorphism)
         Memory* newMemory = new Memory(newPostId, text, theDate, currentUser, originalPost);
         
+        // Adds the memory to the Master Posts array
         if (posts == nullptr) {
             posts = new Post*[500]; 
         }
@@ -510,6 +547,7 @@ void SocialNetworkApp::shareMemory() {
             posts[postCount++] = newMemory;
         }
 
+        // Adds the memory to the User's specific timeline
         currentUser->addPosts(newMemory);
 
         cout << "Memory successfully shared on your timeline!" << endl;
@@ -518,8 +556,9 @@ void SocialNetworkApp::shareMemory() {
     }
 }
 
+// The core application loop that presents the menu and handles user input
 void SocialNetworkApp::run() {
-    loadData();
+    loadData(); // Automatically loads files on startup
     currentUser = nullptr;
 
     int choice;
@@ -548,19 +587,21 @@ void SocialNetworkApp::run() {
         cout << "12. Exit Program" << endl;
         cout << "Enter choice: ";
 
+        // Input validation loop to prevent infinite loops if the user types a string instead of an int
         while (true) {
             if (cin >> choice) {
-                if (cin.peek() == '\n') break;
+                if (cin.peek() == '\n') break; // Ensures no trailing garbage characters
             }
 
-            cin.clear();
-            cin.ignore(10000, '\n');
+            cin.clear(); // Clears the error flag
+            cin.ignore(10000, '\n'); // Empties the buffer
             cout << "Invalid input. Enter ONE integer between 1-12: ";
         }
         
         if (choice < 1 || choice > 12) {
             cout << "Invalid Choice. Choice must be between 1 and 12." << endl;
         } else {
+            // Triggers the appropriate method based on input
             switch (choice) {
                 case 1: setUser(); break;
                 case 2: viewHome(); break;
@@ -580,16 +621,19 @@ void SocialNetworkApp::run() {
     } while (choice != 12);    
 }
 
+// Application Destructor: Deallocates all dynamic heap memory to prevent memory leaks upon exit
 SocialNetworkApp::~SocialNetworkApp() {
     cout << "Cleaning up memory..." << endl;
 
+    // 1. Loop and delete every allocated User object
     if (users != nullptr) {
         for (int i = 0; i < userCount; i++) {
             if (users[i] != nullptr) delete users[i]; 
         }
-        delete[] users; 
+        delete[] users; // Delete the array pointer itself
     }
 
+    // 2. Loop and delete every allocated Page object
     if (pages != nullptr) {
         for (int i = 0; i < pageCount; i++) {
             if (pages[i] != nullptr) delete pages[i];
@@ -597,6 +641,7 @@ SocialNetworkApp::~SocialNetworkApp() {
         delete[] pages;
     }
 
+    // 3. Loop and delete every allocated Post object
     if (posts != nullptr) {
         for (int i = 0; i < postCount; i++) {
             if (posts[i] != nullptr) delete posts[i];
@@ -604,6 +649,7 @@ SocialNetworkApp::~SocialNetworkApp() {
         delete[] posts;
     }
 
+    // 4. Delete the comments tracker array ONLY (Comments themselves are deleted by Post::~Post to avoid Double Free crash)
     if (comments != nullptr) {
         delete[] comments;
     }
